@@ -3,6 +3,7 @@
 #include <string.h>
 #include <ctype.h>
 #include "preprocess.h"
+#include "common.h"
 
 // 去除行尾空格，将行尾所有空格替换为“\0”
 void trim_trailing_whitespace(char *str) {
@@ -33,8 +34,8 @@ int is_empty_line(const char *str) {
     return 1;
 }
 
-// 读取和预处理Makefile
-int process_makefile(int verbose_mode) {
+// 读取和预处理Makefile，返回0表示处理正常，为1表示异常
+int process_makefile(int verbose_mode, char (*line_arr_ptr)[MAX_LINE_LENGTH]) {
     // 打开文件
     FILE *fp = fopen("./Makefile", "r");
     if (fp == NULL) {
@@ -43,7 +44,7 @@ int process_makefile(int verbose_mode) {
     }
 
     FILE *output_fp = NULL;
-    if (verbose_mode) {
+    if (verbose_mode == 1) {
         output_fp = fopen("./Minimake_cleared.mk", "w");
         if (output_fp == NULL) {
             perror("Failed to create output file");
@@ -55,7 +56,7 @@ int process_makefile(int verbose_mode) {
 
     char line[MAX_LINE_LENGTH];
     int line_number = 0;
-    
+
     // 一行一行地读取文件
     while (fgets(line, sizeof(line), fp) != NULL) {
         line_number++;
@@ -66,11 +67,17 @@ int process_makefile(int verbose_mode) {
         // 去除行尾空格
         trim_trailing_whitespace(line);
         
+        // 将预处理结果存到数组中
+        strcpy(line_arr_ptr[line_number - 1], line);
+
         // 过滤空行
         if (!is_empty_line(line)) {     // 如果不是空行就打印
             if (verbose_mode && output_fp) {
                 fprintf(output_fp, "%s\n", line);
             }
+                printf("%s\n", line_arr_ptr[line_number - 1]);
+        }else{
+            printf("\n");
         }
     }
 
