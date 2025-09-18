@@ -4,11 +4,11 @@
 #include "common.h"
 
 typedef enum {
-    LINE_EMPTY,      // 空行
-    LINE_TARGET,     // 目标行 (含冒号)
-    LINE_COMMAND,    // 命令行 (以制表符开头)
-    LINE_MESSAGE,     // 注释行
-    LINE_INVALID     // 无效行(有内容但既不是目标行也不是命令行也不是注释行,可以认为是第一种报错)
+  LINE_EMPTY,   // 空行
+  LINE_TARGET,  // 目标行 (含冒号)
+  LINE_COMMAND, // 命令行 (以制表符开头)
+  LINE_MESSAGE, // 注释行
+  LINE_INVALID  // 无效行(有内容但既不是目标行也不是命令行也不是注释行)
 } LineType;
 
 // 函数声明
