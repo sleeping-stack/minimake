@@ -1,5 +1,6 @@
 #include "common.h"
 #include "grammar_check.h"
+#include "parse.h"
 #include "preprocess.h"
 #include <stdio.h>
 #include <stdlib.h>
@@ -49,7 +50,16 @@ int main(int argc, char *argv[]) {
 
   char line_arr[MAX_LINE_NUMBERS][MAX_LINE_LENGTH] = {{'\0'}};
   process_makefile(verbose_mode, line_arr);
-  grammar_check(line_arr);
+
+  int has_error = grammar_check(line_arr);
+
+  if (has_error == 1)
+    printf("Please make sure the grammer is right so that the program can "
+           "parse the makefile.\n");
+  else {
+    Target_block tb_arr[MAX_BLOCK_NUMBERS];
+    int tb_count = parse_makefile(line_arr, tb_arr);
+  }
 
   return 0;
 }

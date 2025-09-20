@@ -3,7 +3,8 @@
 
 #define MAX_LINE_LENGTH 1000
 #define MAX_LINE_NUMBERS 1000
-#define MAX_WORD_NUMBERS 32
+#define MAX_WORD_NUMBERS 33 // 包括‘\0’
 #define MAX_DEP_NUMBERS  100
+#define MAX_BLOCK_NUMBERS 100
 
 #endif // COMMON_H

@@ -11,6 +11,11 @@ typedef struct {
   int cmd_count;
 } Target_block;
 
-int parse(char (*line_arr_ptr)[MAX_LINE_LENGTH]);
+void parse_target_line(const char *str, Target_block tb_arr[MAX_BLOCK_NUMBERS],
+                       int tb_count);
+void parse_cmd_line(const char *str, Target_block tb_arr[MAX_BLOCK_NUMBERS],
+                    int tb_count, int cmd_count);
+int parse_makefile(char (*line_arr_ptr)[MAX_LINE_LENGTH],
+                   Target_block tb_arr[MAX_BLOCK_NUMBERS]);
 
 #endif // PARSE_H
