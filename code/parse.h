@@ -2,6 +2,7 @@
 #define PARSE_H
 
 #include "common.h"
+#include <stdio.h>
 
 typedef struct {
   char target[MAX_WORD_NUMBERS];
@@ -11,11 +12,12 @@ typedef struct {
   int cmd_count;
 } Target_block;
 
-void parse_target_line(const char *str, Target_block tb_arr[MAX_BLOCK_NUMBERS],
-                       int tb_count);
-void parse_cmd_line(const char *str, Target_block tb_arr[MAX_BLOCK_NUMBERS],
-                    int tb_count, int cmd_count);
-int parse_makefile(char (*line_arr_ptr)[MAX_LINE_LENGTH],
-                   Target_block tb_arr[MAX_BLOCK_NUMBERS]);
+static void trim(char *str);
+static void safe_copy(char *dst, size_t dst_size, const char *src);
+void parse_target_line(const char *str, Target_block *tb_arr, int tb_count);
+void parse_cmd_line(const char *str, Target_block *tb_arr, int tb_count,
+                    int cmd_count);
+int parse_makefile(char (*line_arr_ptr)[MAX_LINE_LENGTH], Target_block *tb_arr);
+void print_target_blocks(Target_block *tb_arr, int tb_count);
 
 #endif // PARSE_H

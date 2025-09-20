@@ -22,57 +22,96 @@ static void trim(char *str) {
   }
 }
 
-void parse_target_line(const char *str, Target_block tb_arr[MAX_BLOCK_NUMBERS],
-                       int tb_count) {
-  if (tb_count == -1)	// 防止第一次读取目标行出现错误
-    tb_count = 0;
+// 安全复制
+static void safe_copy(char *dst, size_t dst_size, const char *src) {
+  if (dst_size == 0)
+    return;
+  strncpy(dst, src, dst_size - 1);
+  dst[dst_size - 1] = '\0';
+}
+
+void parse_target_line(const char *str, Target_block *tb_arr, int tb_count) {
+  if (tb_count < 0 || tb_count >= MAX_BLOCK_NUMBERS) {
+    printf("Error!\n");
+    return;
+  }
 
   tb_arr[tb_count].dep_count = 0;
   // 解析目标行
   char s[MAX_LINE_LENGTH] = {'\0'};
-  strncpy(s, str, MAX_LINE_LENGTH - 1);
-  s[MAX_LINE_LENGTH - 1] = '\0';
+  safe_copy(s, sizeof(s), str);
 
-  char *token;
-  token = strtok(s, ":");
-  if (token != NULL) {
-    // 提取目标
-    strncpy(tb_arr[tb_count].target, token, MAX_WORD_NUMBERS);
-    tb_arr[tb_count].target[MAX_WORD_NUMBERS - 1] = '\0'; // 确保字符串终止
+  char *colon = strchr(s, ':');
+  if (!colon)
+    return; // 非法格式
+  *colon = '\0';
+  // 提取目标
+  trim(s);
+  safe_copy(tb_arr[tb_count].target, sizeof(tb_arr[tb_count].target), s);
 
-    // 提取依赖项
-    token = strtok(NULL, " ");
-    while (token != NULL && tb_arr[tb_count].dep_count < MAX_DEP_NUMBERS) {
-      strncpy(tb_arr[tb_count].dep_arr[tb_arr[tb_count].dep_count], token,
-              MAX_WORD_NUMBERS);
-      tb_arr[tb_count]
-          .dep_arr[tb_arr[tb_count].dep_count][MAX_WORD_NUMBERS - 1] =
-          '\0'; // 确保字符串终止
+  // 提取依赖项
+  char *current = colon + 1;
+  while (*current && tb_arr[tb_count].dep_count < MAX_DEP_NUMBERS) {
+    // 跳过前导空格
+    while (*current && isspace((unsigned char)*current)) {
+      current++;
+    }
+
+    if (*current == '\0') {
+      break; // 到达字符串末尾
+    }
+
+    // 标记 token 的开始
+    char *token_start = current;
+
+    // 寻找 token 的结束
+    while (*current && !isspace((unsigned char)*current)) {
+      current++;
+    }
+
+    // 提取 token
+    size_t token_len = current - token_start;
+    if (token_len > 0) {
+      char token[MAX_WORD_NUMBERS];
+      safe_copy(token, sizeof(token), token_start);
+      token[token_len] = '\0'; // 确保 token 正确终止
+
+      safe_copy(tb_arr[tb_count].dep_arr[tb_arr[tb_count].dep_count],
+                sizeof(tb_arr[tb_count].dep_arr[tb_arr[tb_count].dep_count]),
+                token);
       tb_arr[tb_count].dep_count++;
-      token = strtok(NULL, " ");
     }
   }
 }
 
-void parse_cmd_line(const char *str, Target_block tb_arr[MAX_BLOCK_NUMBERS],
-                    int tb_count, int cmd_count) {
-  strcpy(tb_arr[tb_count].commands[cmd_count], str);
+void parse_cmd_line(const char *str, Target_block *tb_arr, int tb_count,
+                    int cmd_count) {
+  if (tb_count < 0 || tb_count >= MAX_BLOCK_NUMBERS)
+    return;
+  if (cmd_count < 0 || cmd_count >= MAX_LINE_NUMBERS)
+    return;
+  // 去掉行尾换行
+  char buf[MAX_LINE_LENGTH];
+  safe_copy(buf, sizeof(buf), str);
+  trim(buf);
+  safe_copy(tb_arr[tb_count].commands[cmd_count],
+            sizeof(tb_arr[tb_count].commands[cmd_count]), buf);
 }
 
 int parse_makefile(char (*line_arr_ptr)[MAX_LINE_LENGTH],
-                   Target_block tb_arr[MAX_BLOCK_NUMBERS]) {
+                   Target_block *tb_arr) {
   int tb_count = -1;
-  int line_count = 0;
   int cmd_count = 0;
 
   // 解析每个目标块的目标行
-  for (; line_count < MAX_LINE_NUMBERS; line_count++) {
+  for (int line_count = 0; line_count < MAX_LINE_NUMBERS; line_count++) {
     if (line_type_judge(line_arr_ptr[line_count]) == LINE_TARGET) {
-      // 重置cmd_count
+      // 结束前一个代码块并重置cmd_count
       if (tb_count >= 0) {
         tb_arr[tb_count].cmd_count = cmd_count;
         cmd_count = 0;
       }
+
       tb_count++;
       parse_target_line(line_arr_ptr[line_count], tb_arr, tb_count);
     } else if (line_type_judge(line_arr_ptr[line_count]) == LINE_COMMAND) {
@@ -82,5 +121,30 @@ int parse_makefile(char (*line_arr_ptr)[MAX_LINE_LENGTH],
       continue;
   }
 
-  return tb_count;
+  // 提交最后一个目标块
+  if (tb_count >= 0) {
+    tb_arr[tb_count].cmd_count = cmd_count;
+  }
+
+  return (tb_count + 1);
+}
+
+void print_target_blocks(Target_block *tb_arr, int tb_count) {
+  for (int i = 0; i < tb_count; i++) {
+    printf("目标块 #%d:\n", i + 1);
+    // 打印目标名
+    printf("  目标: %s\n", tb_arr[i].target);
+    // 打印依赖
+    for (int j = 0; j < tb_arr[i].dep_count; j++) {
+      printf("  依赖 #%d: %s\n", j + 1, tb_arr[i].dep_arr[j]);
+    }
+    // 打印命令
+    for (int j = 0; j < tb_arr[i].cmd_count; j++) {
+      printf("  命令 #%d:\n    %s\n", j + 1, tb_arr[i].commands[j]);
+    }
+  }
+}
+
+void parse_check(Target_block *tb_arr) {
+  
 }
