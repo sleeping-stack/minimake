@@ -3,5 +3,7 @@
 
 #define MAX_LINE_LENGTH 1000
 #define MAX_LINE_NUMBERS 1000
+#define MAX_WORD_NUMBERS 32
+#define MAX_DEP_NUMBERS  100
 
 #endif // COMMON_H

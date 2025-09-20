@@ -13,7 +13,7 @@ typedef enum {
 
 // 函数声明
 LineType line_type_judge(const char *str);
-LineType check_colon(const char *str);
+int target_line_check(const char *str);
 int grammar_check(char (*line_arr_ptr)[MAX_LINE_LENGTH]);
 
 #endif // GRAMMAR_CHECK_H

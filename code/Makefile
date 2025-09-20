@@ -14,7 +14,7 @@ app: main.c utils.c  # 目标: app，依赖: main.c utils.c(依赖可以不存�
     
 	git apply  xxx.patch  # 样例
 
-
+app: main.c utils.c  # 目标: app，依赖: main.c utils.c(依赖可以不存在)
 
 
 

@@ -6,33 +6,36 @@
 
 LineType line_type_judge(const char *str) {
   if (str == NULL)
-    return 0; // 添加空指针检查
+    exit(1); // 添加空指针检查
 
-  // 跳过前导空格
-  while (*str == ' ') {
-    str++;
+  if (target_line_check(str) == 1) {
+    return LINE_TARGET;
+  } else {
+    if (*str == '\t')
+      return LINE_COMMAND;
+    else {
+      // 跳过前导空格
+      while (*str == ' ') {
+        str++;
+      }
+
+      if (*str == '\0' || *str == '\n') { // 空行
+        return LINE_EMPTY;
+      } else if (*str == '#') { // 注释行
+        return LINE_MESSAGE;
+      }
+
+      return LINE_INVALID;
+    }
   }
-
-  // 如果以制表符开头，是命令行
-  if (*str == '\t') {
-    return LINE_COMMAND;
-  } else if (*str == '\0' || *str == '\n') { // 空行
-    return LINE_EMPTY;
-  } else if (*str == '#') { // 注释行
-    return LINE_MESSAGE;
-  }
-
-  return check_colon(str);
 }
 
-// 检查冒号(该行应该不为命令行，空行，注释行)
-LineType check_colon(const char *str) {
-  char *colon_pos = strchr(str, ':');
-  if (colon_pos == NULL) {
-    return LINE_INVALID;
-  }
-
-  return LINE_TARGET;
+// 检查是否是目标行
+int target_line_check(const char *str) {
+  if (str[0] == ' ' || str[0] == '\t' || str[0] == ':') // 不是目标行
+    return 0;
+  if (strchr(str, ':') != NULL)
+    return 1;
 }
 
 // 主要的语法检查函数
@@ -44,7 +47,8 @@ int grammar_check(char (*line_arr_ptr)[MAX_LINE_LENGTH]) {
 
   int has_error = 0;
   int line_count = 0;
-  // 跳过目标行前的空行和注释行
+
+  // 跳过第一个目标行前的空行和注释行
   for (int i = 0; i < MAX_LINE_NUMBERS; i++) {
     if (line_type_judge(line_arr_ptr[i]) == LINE_MESSAGE ||
         line_type_judge(line_arr_ptr[i]) == LINE_EMPTY) {
@@ -58,22 +62,27 @@ int grammar_check(char (*line_arr_ptr)[MAX_LINE_LENGTH]) {
   // 检查目标行是否有问题
   if (line_type_judge(line_arr_ptr[line_count]) == LINE_COMMAND) {
     printf("Line%d: Command found before rule\n", line_count + 1);
-	line_count++;
     has_error = 1;
   } else if (line_type_judge(line_arr_ptr[line_count]) == LINE_INVALID) {
     printf("Line%d: Missing colon in target definition\n", line_count + 1);
-	line_count++;
     has_error = 1;
   }
 
-  // 从第二行开始检查命令行是否有问题
+  line_count++;
+
+  // 开始检查命令行是否有问题
   for (int i = line_count; i < MAX_LINE_NUMBERS; i++) {
     if (line_type_judge(line_arr_ptr[i]) == LINE_MESSAGE ||
         line_type_judge(line_arr_ptr[i]) == LINE_EMPTY) {
       continue;
     }
+
+    if (line_type_judge(line_arr_ptr[i]) == LINE_TARGET) {
+      continue;
+    }
+
     if (line_type_judge(line_arr_ptr[i]) == LINE_INVALID) {
-      printf("Line%d: Using space instead of tab\n", i + 1);
+      printf("Line%d: Command line should start with a tab\n", i + 1);
       has_error = 1;
     }
   }
