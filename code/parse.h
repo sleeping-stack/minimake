@@ -21,6 +21,6 @@ int parse_makefile(char (*line_arr_ptr)[MAX_LINE_LENGTH], Target_block *tb_arr);
 void print_target_blocks(Target_block *tb_arr, int tb_count);
 int has_duplicate_target(Target_block *tb_arr, int tb_count);
 int is_dep_invaild(Target_block *tb_arr, int tb_count, const char *dep);
-void parse_check(Target_block *tb_arr, int tb_count);
+int parse_check(Target_block *tb_arr, int tb_count);
 
 #endif // PARSE_H

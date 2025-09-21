@@ -129,7 +129,6 @@ int parse_makefile(char (*line_arr_ptr)[MAX_LINE_LENGTH],
   tb_count++;
 
   print_target_blocks(tb_arr, tb_count);
-  parse_check(tb_arr, tb_count);
 
   return tb_count;
 }
@@ -160,6 +159,8 @@ int has_duplicate_target(Target_block *tb_arr, int tb_count) {
       }
     }
   }
+
+  return 0;
 }
 
 // 返回1表示有错误
@@ -182,7 +183,7 @@ int is_dep_invaild(Target_block *tb_arr, int tb_count, const char *dep) {
   return 1;
 }
 
-void parse_check(Target_block *tb_arr, int tb_count) {
+int parse_check(Target_block *tb_arr, int tb_count) {
   int has_error = 0;
 
   if (has_duplicate_target(tb_arr, tb_count) == 1)
@@ -198,4 +199,8 @@ void parse_check(Target_block *tb_arr, int tb_count) {
 
   if (has_error == 0)
     printf("There is no mistakes in the makefile.\n");
+  else
+    printf("Please make sure the makefile has no grammar mistake so that the "
+           "exe can compile program.\n");
+  return has_error;
 }
