@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 
 // 去掉首尾空白
 static void trim(char *str) {
@@ -125,8 +126,12 @@ int parse_makefile(char (*line_arr_ptr)[MAX_LINE_LENGTH],
   if (tb_count >= 0) {
     tb_arr[tb_count].cmd_count = cmd_count;
   }
+  tb_count++;
 
-  return (tb_count + 1);
+  print_target_blocks(tb_arr, tb_count);
+  parse_check(tb_arr, tb_count);
+
+  return tb_count;
 }
 
 void print_target_blocks(Target_block *tb_arr, int tb_count) {
@@ -145,6 +150,52 @@ void print_target_blocks(Target_block *tb_arr, int tb_count) {
   }
 }
 
-void parse_check(Target_block *tb_arr) {
-  
+// 返回1表示有错误
+int has_duplicate_target(Target_block *tb_arr, int tb_count) {
+  for (int i = 0; i < tb_count; i++) {
+    for (int j = i + 1; j < tb_count; j++) {
+      if (strcmp(tb_arr[i].target, tb_arr[j].target) == 0) {
+        printf("Duplicate target definition '%s'\n", tb_arr[i].target);
+        return 1;
+      }
+    }
+  }
+}
+
+// 返回1表示有错误
+int is_dep_invaild(Target_block *tb_arr, int tb_count, const char *dep) {
+  int is_invaild = 0;
+
+  // 比较依赖项是否是makefile中的其他目标
+  for (int i = 0; i < tb_count; i++) {
+    if (strcmp(tb_arr[i].target, dep) == 0) {
+      return 0;
+    }
+  }
+
+  // 判断依赖项在当前目录下是否存在
+  if (access(dep, F_OK) == 0) {
+    return 0;
+  }
+
+  printf("Invalid dependency '%s'\n", dep);
+  return 1;
+}
+
+void parse_check(Target_block *tb_arr, int tb_count) {
+  int has_error = 0;
+
+  if (has_duplicate_target(tb_arr, tb_count) == 1)
+    has_error = 1;
+
+  // 逐个检查依赖项是否无效
+  for (int i = 0; i < tb_count; i++) {
+    for (int j = 0; j < tb_arr[i].dep_count; j++) {
+      if (is_dep_invaild(tb_arr, tb_count, tb_arr[i].dep_arr[j]) == 1)
+        has_error = 1;
+    }
+  }
+
+  if (has_error == 0)
+    printf("There is no mistakes in the makefile.\n");
 }

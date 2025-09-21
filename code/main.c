@@ -63,7 +63,6 @@ int main(int argc, char *argv[]) {
       return 1;
     }
     int tb_count = parse_makefile(line_arr, tb_arr);
-    print_target_blocks(tb_arr, tb_count);
     free(tb_arr);
   }
 
