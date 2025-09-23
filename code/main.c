@@ -1,5 +1,6 @@
 #include "common.h"
 #include "grammar_check.h"
+#include "graph.h"
 #include "parse.h"
 #include "preprocess.h"
 #include <stdio.h>
@@ -34,7 +35,7 @@ int main(int argc, char *argv[]) {
   }
 
   if (argc == 1)
-    printf("No arguments input!\n");
+    printf("No arguments input.\n");
   else {
     for (int i = 1; i < argc; i++) {
       if (flag[i] == 0) {
@@ -49,25 +50,47 @@ int main(int argc, char *argv[]) {
   }
 
   char line_arr[MAX_LINE_NUMBERS][MAX_LINE_LENGTH] = {{'\0'}};
-  process_makefile(verbose_mode, line_arr);
+  if (process_makefile(verbose_mode, line_arr) == 1)
+    return 1;
 
   int has_error = grammar_check(line_arr);
 
-  if (has_error == 1)
+  if (has_error == 1) {
     printf("Please make sure the grammer is right so that the program can "
            "parse the makefile.\n");
-  else {
-    Target_block *tb_arr = malloc(MAX_BLOCK_NUMBERS * sizeof(Target_block));
-    if (tb_arr == NULL) {
-      perror("malloc");
-      return 1;
-    }
-    int tb_count = parse_makefile(line_arr, tb_arr);
-
-    parse_check(tb_arr, tb_count);
-
-    free(tb_arr);
+    return 1;
   }
+
+  Target_block *tb_arr = malloc(MAX_BLOCK_NUMBERS * sizeof(Target_block));
+  if (tb_arr == NULL) {
+    perror("malloc");
+    return 1;
+  }
+  int tb_count = parse_makefile(line_arr, tb_arr);
+
+  if (parse_check(tb_arr, tb_count) != 0) {
+    free(tb_arr);
+    return 1;
+  }
+
+  // 打印依赖图
+  DepGraph g;
+  if (build_dep_graph(&g, tb_arr, tb_count) != 0) {
+    fprintf(stderr, "DepGraph build failed.\n");
+    free(tb_arr);
+    return 1;
+  }
+  puts("==== 依赖图 (dep -> target) ====");
+  print_graph(&g);
+
+  int order[MAX_GRAPH_NODES];
+  int order_len = 0;
+  if (topo_sort_graph(&g, order, &order_len) != 0) {
+    fprintf(stderr, "Topo soft faild.");
+    return -1;
+  }
+
+  free(tb_arr);
 
   return 0;
 }

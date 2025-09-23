@@ -6,5 +6,6 @@
 #define MAX_WORD_NUMBERS 33 // 包括‘\0’
 #define MAX_DEP_NUMBERS  100
 #define MAX_BLOCK_NUMBERS 100
+#define MAX_GRAPH_NODES 512
 
 #endif // COMMON_H
