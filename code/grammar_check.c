@@ -36,6 +36,8 @@ int target_line_check(const char *str) {
     return 0;
   if (strchr(str, ':') != NULL)
     return 1;
+
+  return 0;
 }
 
 // 主要的语法检查函数

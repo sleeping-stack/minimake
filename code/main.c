@@ -1,3 +1,4 @@
+#include "build.h"
 #include "common.h"
 #include "grammar_check.h"
 #include "graph.h"
@@ -85,9 +86,16 @@ int main(int argc, char *argv[]) {
 
   int order[MAX_GRAPH_NODES];
   int order_len = 0;
-  if (topo_sort_graph(&g, order, &order_len) != 0) {
+  int *order_len_ptr = &order_len;
+
+  if (topo_sort_graph(&g, order, order_len_ptr) != 0) {
     fprintf(stderr, "Topo soft faild.");
     return -1;
+  }
+
+  if (perform_builds(tb_arr, tb_count, &g, order, order_len) != 0) {
+    free(tb_arr);
+    return 1;
   }
 
   free(tb_arr);
