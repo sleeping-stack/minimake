@@ -1,3 +1,0 @@
-/home/sleepy/minimake/project/build/CMakeFiles/minimake.dir
-/home/sleepy/minimake/project/build/CMakeFiles/edit_cache.dir
-/home/sleepy/minimake/project/build/CMakeFiles/rebuild_cache.dir

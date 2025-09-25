@@ -1,1 +1,0 @@
-/usr/bin/cc CMakeFiles/minimake.dir/src/build.c.o CMakeFiles/minimake.dir/src/execute_cmd.c.o CMakeFiles/minimake.dir/src/grammar_check.c.o CMakeFiles/minimake.dir/src/graph.c.o CMakeFiles/minimake.dir/src/main.c.o CMakeFiles/minimake.dir/src/parse.c.o CMakeFiles/minimake.dir/src/preprocess.c.o -o ../bin/minimake 
