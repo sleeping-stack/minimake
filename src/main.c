@@ -3,12 +3,16 @@
 #include "grammar_check.h"
 #include "graph.h"
 #include "parse.h"
+#include "parse_var_replace.h"
 #include "preprocess.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
 int main(int argc, char *argv[]) {
+  // 初始化变量系统
+  var_init();
+
   // 创建动态flag数组用来表示输入的每个参数的状态，1表示该参数已匹配
   int *flag = malloc(argc * sizeof(int));
   if (flag == NULL) {
@@ -73,6 +77,9 @@ int main(int argc, char *argv[]) {
     free(tb_arr);
     return 1;
   }
+  
+  // 将 Makefile 变量导出到环境（便于命令中用 $NAME）
+  var_export_to_env();
 
   // 打印依赖图
   DepGraph g;

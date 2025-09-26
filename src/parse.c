@@ -1,6 +1,7 @@
 #include "parse.h"
 #include "common.h"
 #include "grammar_check.h"
+#include "parse_var_replace.h"
 #include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -48,6 +49,10 @@ void parse_target_line(const char *str, Target_block *tb_arr, int tb_count) {
   *colon = '\0';
   // 提取目标
   trim(s);
+
+  // 变量展开：目标名
+  char tgt_exp[MAX_LINE_LENGTH];
+  var_expand_into(s, tgt_exp, sizeof(tgt_exp));
   safe_copy(tb_arr[tb_count].target, sizeof(tb_arr[tb_count].target), s);
 
   // 提取依赖项
@@ -72,15 +77,43 @@ void parse_target_line(const char *str, Target_block *tb_arr, int tb_count) {
 
     // 提取 token
     size_t token_len = current - token_start;
-    if (token_len > 0) {
-      char token[MAX_WORD_NUMBERS];
-      safe_copy(token, sizeof(token), token_start);
-      token[token_len] = '\0'; // 确保 token 正确终止
+    if (token_len == 0)
+      continue;
 
-      safe_copy(tb_arr[tb_count].dep_arr[tb_arr[tb_count].dep_count],
-                sizeof(tb_arr[tb_count].dep_arr[tb_arr[tb_count].dep_count]),
-                token);
-      tb_arr[tb_count].dep_count++;
+    // 复制原始 token
+    char token_raw[MAX_LINE_LENGTH];
+    size_t copy_len =
+        token_len < sizeof(token_raw) - 1 ? token_len : sizeof(token_raw) - 1;
+    memcpy(token_raw, token_start, copy_len);
+    token_raw[copy_len] = '\0';
+
+    // 展开变量
+    char token_exp[MAX_LINE_LENGTH];
+    var_expand_into(token_raw, token_exp, sizeof(token_exp));
+    trim(token_exp);
+
+    // 二次切分：将展开结果按空白继续拆分为多个依赖
+    char *p = token_exp;
+    while (*p && tb_arr[tb_count].dep_count < MAX_DEP_NUMBERS) {
+      while (*p && isspace((unsigned char)*p))
+        p++;
+      if (!*p)
+        break;
+      char *wstart = p;
+      while (*p && !isspace((unsigned char)*p))
+        p++;
+      size_t wlen = p - wstart;
+      if (wlen > 0) {
+        char word[MAX_WORD_NUMBERS];
+        size_t wcopy = wlen < sizeof(word) - 1 ? wlen : sizeof(word) - 1;
+        memcpy(word, wstart, wcopy);
+        word[wcopy] = '\0';
+        // 保存一个依赖
+        safe_copy(tb_arr[tb_count].dep_arr[tb_arr[tb_count].dep_count],
+                  sizeof(tb_arr[tb_count].dep_arr[tb_arr[tb_count].dep_count]),
+                  word);
+        tb_arr[tb_count].dep_count++;
+      }
     }
   }
 }
@@ -95,8 +128,13 @@ void parse_cmd_line(const char *str, Target_block *tb_arr, int tb_count,
   char buf[MAX_LINE_LENGTH];
   safe_copy(buf, sizeof(buf), str);
   trim(buf);
+
+  // 变量展开命令
+  char cmd_exp[MAX_LINE_LENGTH];
+  var_expand_into(buf, cmd_exp, sizeof(cmd_exp));
+
   safe_copy(tb_arr[tb_count].commands[cmd_count],
-            sizeof(tb_arr[tb_count].commands[cmd_count]), buf);
+            sizeof(tb_arr[tb_count].commands[cmd_count]), cmd_exp);
 }
 
 int parse_makefile(char (*line_arr_ptr)[MAX_LINE_LENGTH],
@@ -104,9 +142,34 @@ int parse_makefile(char (*line_arr_ptr)[MAX_LINE_LENGTH],
   int tb_count = -1;
   int cmd_count = 0;
 
-  // 解析每个目标块的目标行
+  // 解析每个规则块与变量定义
   for (int line_count = 0; line_count < MAX_LINE_NUMBERS; line_count++) {
-    if (line_type_judge(line_arr_ptr[line_count]) == LINE_TARGET) {
+    LineType t = line_type_judge(line_arr_ptr[line_count]);
+    if (t == LINE_VARIABLE) {
+      // 变量定义：NAME = VALUE
+      char line[MAX_LINE_LENGTH];
+      safe_copy(line, sizeof(line), line_arr_ptr[line_count]);
+
+      char *eq = strchr(line, '=');
+      if (!eq) // 未找到等号
+        continue;
+
+      *eq = '\0';
+      char *name = line;
+      char *value = eq + 1;
+
+      trim(name);
+      trim(value);
+
+      // 右值也允许包含变量引用，先展开
+      char value_exp[MAX_LINE_LENGTH];
+      var_expand_into(value, value_exp, sizeof(value_exp));
+
+      var_set(name, value_exp);
+      continue;
+    }
+
+    if (t == LINE_TARGET) {
       // 结束前一个代码块并重置cmd_count
       if (tb_count >= 0) {
         tb_arr[tb_count].cmd_count = cmd_count;
@@ -115,7 +178,7 @@ int parse_makefile(char (*line_arr_ptr)[MAX_LINE_LENGTH],
 
       tb_count++;
       parse_target_line(line_arr_ptr[line_count], tb_arr, tb_count);
-    } else if (line_type_judge(line_arr_ptr[line_count]) == LINE_COMMAND) {
+    } else if (t == LINE_COMMAND) {
       parse_cmd_line(line_arr_ptr[line_count], tb_arr, tb_count, cmd_count);
       cmd_count++;
     } else

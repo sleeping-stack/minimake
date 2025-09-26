@@ -273,6 +273,30 @@ src/parse.c.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/minimake.dir/build.make CMakeFiles/minimake.dir/src/parse.c.s
 .PHONY : src/parse.c.s
 
+src/parse_var_replace.o: src/parse_var_replace.c.o
+.PHONY : src/parse_var_replace.o
+
+# target to build an object file
+src/parse_var_replace.c.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/minimake.dir/build.make CMakeFiles/minimake.dir/src/parse_var_replace.c.o
+.PHONY : src/parse_var_replace.c.o
+
+src/parse_var_replace.i: src/parse_var_replace.c.i
+.PHONY : src/parse_var_replace.i
+
+# target to preprocess a source file
+src/parse_var_replace.c.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/minimake.dir/build.make CMakeFiles/minimake.dir/src/parse_var_replace.c.i
+.PHONY : src/parse_var_replace.c.i
+
+src/parse_var_replace.s: src/parse_var_replace.c.s
+.PHONY : src/parse_var_replace.s
+
+# target to generate assembly for a file
+src/parse_var_replace.c.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/minimake.dir/build.make CMakeFiles/minimake.dir/src/parse_var_replace.c.s
+.PHONY : src/parse_var_replace.c.s
+
 src/preprocess.o: src/preprocess.c.o
 .PHONY : src/preprocess.o
 
@@ -324,6 +348,9 @@ help:
 	@echo "... src/parse.o"
 	@echo "... src/parse.i"
 	@echo "... src/parse.s"
+	@echo "... src/parse_var_replace.o"
+	@echo "... src/parse_var_replace.i"
+	@echo "... src/parse_var_replace.s"
 	@echo "... src/preprocess.o"
 	@echo "... src/preprocess.i"
 	@echo "... src/preprocess.s"

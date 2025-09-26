@@ -7,5 +7,6 @@
 #define MAX_DEP_NUMBERS  100
 #define MAX_BLOCK_NUMBERS 100
 #define MAX_GRAPH_NODES 512
+#define MAX_VARS 256
 
 #endif // COMMON_H

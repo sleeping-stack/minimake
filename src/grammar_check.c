@@ -1,5 +1,6 @@
 #include "grammar_check.h"
 #include "common.h"
+#include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -15,14 +16,33 @@ LineType line_type_judge(const char *str) {
       return LINE_COMMAND;
     else {
       // 跳过前导空格
-      while (*str == ' ') {
-        str++;
+      const char *p = str;
+      while (*p == ' ')
+        p++;
+
+      if (*p == '\0' || *p == '\n') { // 空行
+        return LINE_EMPTY;
+      } else if (*p == '#') { // 注释行
+        return LINE_MESSAGE;
       }
 
-      if (*str == '\0' || *str == '\n') { // 空行
-        return LINE_EMPTY;
-      } else if (*str == '#') { // 注释行
-        return LINE_MESSAGE;
+      // 变量定义行：形如  NAME = VALUE  （前导空格允许）
+      // 条件：含有 '=' 且 '=' 左侧至少有一个非空白字符
+      const char *eq = strchr(p, '=');
+      if (eq != NULL) {
+        // 检查 '=' 左侧是否存在非空白字符
+        const char *q = eq - 1;
+        int has_name_char = 0;
+        while (q >= p) {
+          if (!isspace((unsigned char)*q)) {
+            has_name_char = 1;
+            break;
+          }
+          q--;
+        }
+        if (has_name_char) {
+          return LINE_VARIABLE;
+        }
       }
 
       return LINE_INVALID;
@@ -50,10 +70,10 @@ int grammar_check(char (*line_arr_ptr)[MAX_LINE_LENGTH]) {
   int has_error = 0;
   int line_count = 0;
 
-  // 跳过第一个目标行前的空行和注释行
+  // 跳过第一个目标行前的空行，注释行，变量定义行
   for (int i = 0; i < MAX_LINE_NUMBERS; i++) {
-    if (line_type_judge(line_arr_ptr[i]) == LINE_MESSAGE ||
-        line_type_judge(line_arr_ptr[i]) == LINE_EMPTY) {
+    LineType t = line_type_judge(line_arr_ptr[i]);
+    if (t == LINE_MESSAGE || t == LINE_EMPTY || t == LINE_VARIABLE) {
       line_count++;
       continue;
     } else {
@@ -74,16 +94,16 @@ int grammar_check(char (*line_arr_ptr)[MAX_LINE_LENGTH]) {
 
   // 开始检查命令行是否有问题
   for (int i = line_count; i < MAX_LINE_NUMBERS; i++) {
-    if (line_type_judge(line_arr_ptr[i]) == LINE_MESSAGE ||
-        line_type_judge(line_arr_ptr[i]) == LINE_EMPTY) {
+    LineType t = line_type_judge(line_arr_ptr[i]);
+    if (t == LINE_MESSAGE || t == LINE_EMPTY || t == LINE_VARIABLE) {
       continue;
     }
 
-    if (line_type_judge(line_arr_ptr[i]) == LINE_TARGET) {
+    if (t == LINE_TARGET) {
       continue;
     }
 
-    if (line_type_judge(line_arr_ptr[i]) == LINE_INVALID) {
+    if (t == LINE_INVALID) {
       printf("Line%d: Command line should start with a tab\n", i + 1);
       has_error = 1;
     }
