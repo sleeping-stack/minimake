@@ -9,7 +9,7 @@
 #include <unistd.h>
 
 // 去掉首尾空白
-static void trim(char *str) {
+void trim(char *str) {
   char *p = str;
   while (*p && isspace((unsigned char)*p))
     p++;
@@ -53,7 +53,7 @@ void parse_target_line(const char *str, Target_block *tb_arr, int tb_count) {
   // 变量展开：目标名
   char tgt_exp[MAX_LINE_LENGTH];
   var_expand_into(s, tgt_exp, sizeof(tgt_exp));
-  safe_copy(tb_arr[tb_count].target, sizeof(tb_arr[tb_count].target), s);
+  safe_copy(tb_arr[tb_count].target, sizeof(tb_arr[tb_count].target), tgt_exp);
 
   // 提取依赖项
   char *current = colon + 1;
@@ -95,10 +95,12 @@ void parse_target_line(const char *str, Target_block *tb_arr, int tb_count) {
     // 二次切分：将展开结果按空白继续拆分为多个依赖
     char *p = token_exp;
     while (*p && tb_arr[tb_count].dep_count < MAX_DEP_NUMBERS) {
+      // 寻找第一个非空字符
       while (*p && isspace((unsigned char)*p))
         p++;
       if (!*p)
         break;
+
       char *wstart = p;
       while (*p && !isspace((unsigned char)*p))
         p++;

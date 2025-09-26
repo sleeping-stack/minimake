@@ -12,7 +12,7 @@ typedef struct {
   int cmd_count;
 } Target_block;
 
-static void trim(char *str);
+void trim(char *str);
 static void safe_copy(char *dst, size_t dst_size, const char *src);
 void parse_target_line(const char *str, Target_block *tb_arr, int tb_count);
 void parse_cmd_line(const char *str, Target_block *tb_arr, int tb_count,
