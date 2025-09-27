@@ -153,6 +153,30 @@ src/build.c.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/minimake.dir/build.make CMakeFiles/minimake.dir/src/build.c.s
 .PHONY : src/build.c.s
 
+src/clioptions_parse.o: src/clioptions_parse.c.o
+.PHONY : src/clioptions_parse.o
+
+# target to build an object file
+src/clioptions_parse.c.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/minimake.dir/build.make CMakeFiles/minimake.dir/src/clioptions_parse.c.o
+.PHONY : src/clioptions_parse.c.o
+
+src/clioptions_parse.i: src/clioptions_parse.c.i
+.PHONY : src/clioptions_parse.i
+
+# target to preprocess a source file
+src/clioptions_parse.c.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/minimake.dir/build.make CMakeFiles/minimake.dir/src/clioptions_parse.c.i
+.PHONY : src/clioptions_parse.c.i
+
+src/clioptions_parse.s: src/clioptions_parse.c.s
+.PHONY : src/clioptions_parse.s
+
+# target to generate assembly for a file
+src/clioptions_parse.c.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/minimake.dir/build.make CMakeFiles/minimake.dir/src/clioptions_parse.c.s
+.PHONY : src/clioptions_parse.c.s
+
 src/execute_cmd.o: src/execute_cmd.c.o
 .PHONY : src/execute_cmd.o
 
@@ -333,6 +357,9 @@ help:
 	@echo "... src/build.o"
 	@echo "... src/build.i"
 	@echo "... src/build.s"
+	@echo "... src/clioptions_parse.o"
+	@echo "... src/clioptions_parse.i"
+	@echo "... src/clioptions_parse.s"
 	@echo "... src/execute_cmd.o"
 	@echo "... src/execute_cmd.i"
 	@echo "... src/execute_cmd.s"

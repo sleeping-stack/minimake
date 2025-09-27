@@ -96,3 +96,99 @@ int execute_target_commands(Target_block *tb_arr, int tb_index) {
   }
   return 0;
 }
+
+// 自动选择并发度：优先读取 MINIMAKE_JOBS；否则取在线 CPU 数；至少为 1
+static int determine_max_jobs(int requested) {
+  if (requested > 0)
+    return requested;
+
+  long n = sysconf(_SC_NPROCESSORS_ONLN); // 在线 CPU 核数，至少为1
+  if (n <= 0)
+    n = 1;
+  return (int)n;
+}
+
+// 为每个目标 fork 一个子进程：子进程内部顺序执行该目标的命令
+int execute_targets_parallel(Target_block *tb_arr, const int *indices,
+                             int count, int max_parallel) {
+  if (!tb_arr || !indices || count <= 0)
+    return 0;
+
+  max_parallel = determine_max_jobs(max_parallel);
+  if (max_parallel < 1)
+    max_parallel = 1;
+
+  int next = 0;     // 下一个待启动的目标在 indices[] 的位置
+  int active = 0;   // 正在运行的子进程数量
+  int finished = 0; // 已完成的目标数量
+  int failed = 0;   // 任一失败即置位，停止继续启动新作业
+
+  // 简单环路：启动到达并发上限；等待任意子进程结束；再继续启动
+  while (finished < count) {
+    // 启动新作业
+    while (!failed && active < max_parallel && next < count) {
+      int ti = indices[next];
+      // 无命令的目标直接视为成功完成
+      if (tb_arr[ti].cmd_count <= 0) {
+        next++;
+        finished++;
+        continue;
+      }
+
+      printf("[PAR] start target: %s\n", tb_arr[ti].target);
+
+      pid_t pid = fork();
+      if (pid < 0) {
+        perror("fork");
+        failed = 1;
+        break;
+      }
+      if (pid == 0) {
+        // 子进程：串行执行本目标的命令
+        int rc = execute_target_commands(tb_arr, ti);
+        _exit(rc == 0 ? 0 : 1);
+      }
+
+      // 父进程：计数
+      active++;
+      next++;
+    }
+
+    if (active == 0) {
+      // 没有在跑的子进程且无法再启动（可能因为失败或已全部跳过）
+      break;
+    }
+
+    // 等待任意一个子进程结束
+    int status = 0;
+    pid_t w = waitpid(-1, &status, 0);
+    if (w < 0) {
+      if (errno == EINTR)
+        continue;
+      perror("waitpid");
+      failed = 1;
+      break;
+    }
+
+    active--;
+    finished++;
+
+    if (WIFEXITED(status)) {
+      int ec = WEXITSTATUS(status);
+      if (ec != 0) {
+        fprintf(stderr, "[PAR] a target failed (exit=%d)\n", ec);
+        failed = 1;
+      }
+    } else if (WIFSIGNALED(status)) {
+      fprintf(stderr, "[PAR] a target terminated by signal %d\n",
+              WTERMSIG(status));
+      failed = 1;
+    } else {
+      fprintf(stderr, "[PAR] a target ended abnormally\n");
+      failed = 1;
+    }
+  }
+
+  // 若失败，不再启动新的；但已等待所有已启动的进程回收（循环条件保证）
+  return failed ? -1 : 0;
+}

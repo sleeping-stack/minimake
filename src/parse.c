@@ -25,7 +25,7 @@ void trim(char *str) {
 }
 
 // 安全复制
-static void safe_copy(char *dst, size_t dst_size, const char *src) {
+void safe_copy(char *dst, size_t dst_size, const char *src) {
   if (dst_size == 0)
     return;
   strncpy(dst, src, dst_size - 1);

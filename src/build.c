@@ -1,12 +1,13 @@
 #include "build.h"
 #include "execute_cmd.h"
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <sys/stat.h>
 #include <time.h>
 
 // 查找目标在 Target_block 数组中的索引
-static int find_target_block(Target_block *tb_arr, int tb_count,
+static int find_target_index(Target_block *tb_arr, int tb_count,
                              const char *name) {
   for (int i = 0; i < tb_count; i++) {
     if (strcmp(tb_arr[i].target, name) == 0)
@@ -53,36 +54,128 @@ int target_need_build(Target_block *tb_arr, int tb_index) {
   return need;
 }
 
-int perform_builds(Target_block *tb_arr, int tb_count, const DepGraph *g,
-                   const int order[], int order_len) {
-  printf("Start compile.\n");
+// 使用深度优先遍历查找构建一个目标所需的依赖
+static void mark_needed_dfs(Target_block *tb_arr, int tb_count, int idx,
+                            char *needed) {
+  if (idx < 0)
+    return;
 
-  for (int i = 0; i < order_len; i++) { // 按照拓扑排序的顺序进行构建
-    int node_idx = order[i];
-    if (!g->nodes[node_idx].is_target)
-      continue; // 普通文件节点跳过
+  if (needed[idx] == 1)
+    return;
 
-    const char *tgt_name = g->nodes[node_idx].name;
-    int tb_index = find_target_block(tb_arr, tb_count, tgt_name);
-    if (tb_index < 0) {
-      fprintf(stderr, "内部错误: 找不到 '%s' 所在目标块\n", tgt_name);
-      return -1;
+  needed[idx] = 1;
+
+  for (int d = 0; d < tb_arr[idx].dep_count; ++d) {
+    const char *dep = tb_arr[idx].dep_arr[d];
+    int j = find_target_index(tb_arr, tb_count, dep);
+    if (j >= 0) // dep[j]为makefile中的其他目标，需要构建
+      mark_needed_dfs(tb_arr, tb_count, j, needed);
+  }
+}
+
+// 返回0表示正常，1为异常
+int build_parallel(Target_block *tb_arr, int tb_count, int jobs,
+                   const char *target) {
+  if (!tb_arr || tb_count <= 0)
+    return 0;
+
+  int root = 0; // 默认以第一个目标为根目标
+  if (!target)
+    root = 0;
+  else {
+    root = find_target_index(tb_arr, tb_count, target);
+    if (root < 0) {
+      printf("Invaild target!\n");
+      return 1;
+    }
+  }
+
+  // 计算“需要构建的子图”：从 root 出发的可达目标集合
+  char *needed =
+      (char *)calloc((size_t)tb_count, 1);           // 需要构建的目标的下标数组
+  char *built = (char *)calloc((size_t)tb_count, 1); // 表示目标是否构建完成
+  if (!needed || !built) {
+    free(needed);
+    free(built);
+    fprintf(stderr, "Calloc failed.\n");
+    return 1;
+  }
+  mark_needed_dfs(tb_arr, tb_count, root, needed);
+
+  // 拓扑分批：每一批挑选“依赖都已准备好”的目标并行执行
+  int remaining = 0; // 剩余需要构建的目标数
+  for (int i = 0; i < tb_count; ++i)
+    if (needed[i])
+      remaining++;
+
+  while (remaining > 0) {
+    int indices[MAX_BLOCK_NUMBERS];
+    int n_ready = 0; // 本批可执行目标数量
+    int failed = 0;  // 本批是否出现错误（如缺失依赖）
+
+    // 收集当前可执行的目标
+    for (int i = 0; i < tb_count; ++i) {
+      if (!needed[i] || built[i]) // 不在子图或已将构建完成，跳过
+        continue;
+
+      int ready = 1; // 依赖准备好可以构建
+
+      for (int d = 0; d < tb_arr[i].dep_count; ++d) {
+        int j = find_target_index(tb_arr, tb_count, tb_arr[i].dep_arr[d]);
+        // 依赖若是目标且属于 needed，则必须先构建完成
+        if (j >= 0 && needed[j] && !built[j]) {
+          ready = 0; // 该目标不可构建
+          break;
+        }
+      }
+
+      if(ready == 0)
+        continue;
+
+      // 依赖已满足构建条件，判断是否需要构建：
+      // 返回  1 -> 需要构建
+      // 返回  0 -> 已是最新
+      // 返回 -1 -> 依赖缺失或 stat 出错
+      int need = target_need_build(tb_arr, i);
+      if (need < 0) {
+        failed = 1;
+        break;
+      }
+      if (need == 0) {
+        built[i] = 1;
+        remaining--;
+        printf("[UP-TO-DATE] %s\n", tb_arr[i].target);
+        continue;
+      }
+
+      // 需要构建：加入并行队列
+      indices[n_ready++] = i;
     }
 
-    int need = target_need_build(tb_arr, tb_index);
-    if (need < 0) {
-      fprintf(stderr, "停止：无法处理目标 '%s'\n", tgt_name);
-      return -1;
-    } else if (need == 0) {
-      printf("[UP-TO-DATE] %s\n", tgt_name);
-      continue;
-    } else {
-      printf("[BUILD] %s\n", tgt_name);
-      if (execute_target_commands(tb_arr, tb_index) != 0) {
-        fprintf(stderr, "构建目标 '%s' 失败，停止。\n", tgt_name);
-        return -1;
+    if (failed) {
+      free(needed);
+      free(built);
+      return 1;
+    }
+
+    // 并行执行本批所有可执行的目标
+    if (execute_targets_parallel(tb_arr, indices, n_ready, jobs) != 0) {
+      free(needed);
+      free(built);
+      return 1;
+    }
+
+    // 标记本批已完成
+    for (int k = 0; k < n_ready; ++k) {
+      int i = indices[k];
+      if (!built[i]) {
+        built[i] = 1;
+        remaining--;
       }
     }
   }
+
+  free(needed);
+  free(built);
   return 0;
 }

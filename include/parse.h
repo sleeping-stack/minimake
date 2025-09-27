@@ -13,7 +13,7 @@ typedef struct {
 } Target_block;
 
 void trim(char *str);
-static void safe_copy(char *dst, size_t dst_size, const char *src);
+void safe_copy(char *dst, size_t dst_size, const char *src);
 void parse_target_line(const char *str, Target_block *tb_arr, int tb_count);
 void parse_cmd_line(const char *str, Target_block *tb_arr, int tb_count,
                     int cmd_count);
