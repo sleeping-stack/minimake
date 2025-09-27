@@ -62,6 +62,9 @@ int target_line_check(const char *str) {
 
 // 主要的语法检查函数
 int grammar_check(char (*line_arr_ptr)[MAX_LINE_LENGTH]) {
+  puts("==============================================");
+  puts("== 静态语法检查阶段 ==");
+  puts("==============================================");
   if (line_arr_ptr == NULL) {
     printf("Error: NULL pointer passed to grammar_check\n");
     return 1;
@@ -109,5 +112,9 @@ int grammar_check(char (*line_arr_ptr)[MAX_LINE_LENGTH]) {
     }
   }
 
+  if (has_error == 0)
+    puts("-- 静态语法检查通过 --");
+  puts("----------------------------------------------");
+  puts("");
   return has_error;
 }

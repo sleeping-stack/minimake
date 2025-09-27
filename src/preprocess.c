@@ -43,6 +43,11 @@ int process_makefile(int verbose_mode, char (*line_arr_ptr)[MAX_LINE_LENGTH]) {
         return 1;
     }
 
+    // 分界与提示：预处理阶段开始
+    puts("=========================================================");
+    puts("== 预处理阶段: 读取并清理 Makefile (comments/尾部空白) ==");
+    puts("=========================================================");
+
     FILE *output_fp = NULL;
     if (verbose_mode == 1) {
         output_fp = fopen("./Minimake_cleared.mk", "w");
@@ -51,7 +56,7 @@ int process_makefile(int verbose_mode, char (*line_arr_ptr)[MAX_LINE_LENGTH]) {
             fclose(fp);
             return 1;
         }
-        printf("Verbose mode enabled. Cleaned content will be saved to Minimake_cleared.mk\n");
+        printf("Verbose mode enabled. Cleaned content will be saved to Minimake_cleared.mk.\n\n");
     }
 
     char line[MAX_LINE_LENGTH];
@@ -86,6 +91,9 @@ int process_makefile(int verbose_mode, char (*line_arr_ptr)[MAX_LINE_LENGTH]) {
         fclose(output_fp);
     }
     
-    printf("Makefile processing completed.\n");
+    printf("\nMakefile processing completed.\n");
+    // 分界与提示：预处理阶段结束
+    puts("----------------------------------------------");
+    puts("");
     return 0;
 }

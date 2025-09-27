@@ -17,8 +17,10 @@ main.o: main.c libutil.h
 	$(CC) ${CFLAGS} -c main.c -o main.o
 
 $(tag): ${src}
-	$(BUILD_CMD) -o $(tag) $(src)
+	$(BUILD_CMD) -o $(tag) $$src
 	echo "hahaha"
+	echo $$HOME
+	echo $$tag
 
-#clean:
-#	rm *.o $(tag)
+clean:
+	rm *.o $(tag)

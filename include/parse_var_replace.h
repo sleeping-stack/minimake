@@ -33,4 +33,7 @@ void var_expand_into(const char *src, char *dst, size_t dst_size);
 // 将变量表导出为环境变量（setenv），便于在命令中用 $NAME
 void var_export_to_env(void);
 
+// 打印当前已定义的变量（仅内部表，不含未覆盖的环境变量）
+void var_print_all(void);
+
 #endif

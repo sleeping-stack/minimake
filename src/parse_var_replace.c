@@ -14,7 +14,6 @@
  * - var_export_to_env  将内部变量导出到进程环境
  *
  * 注意：
- * - 本模块不做线程安全保证。
  * - 所有字符串写入都做了边界保护，发生截断时保持以'\0'结尾。
  */
 
@@ -269,5 +268,14 @@ void var_export_to_env(void) {
       continue;
     // setenv 覆盖导出
     setenv(g_vars[i].name, g_vars[i].value, 1);
+  }
+}
+
+// 打印当前内部变量表（按存储顺序），便于调试
+void var_print_all(void) {
+  for (int i = 0; i < MAX_VARS; i++) {
+    if (!g_vars[i].used)
+      continue;
+    printf("%s=%s\n", g_vars[i].name, g_vars[i].value);
   }
 }

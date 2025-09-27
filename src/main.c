@@ -60,7 +60,6 @@ int main(int argc, char *argv[]) {
     free(tb_arr);
     return 1;
   }
-  puts("==== 依赖图 (dep -> target) ====");
   print_graph(&g);
 
   int order[MAX_GRAPH_NODES];

@@ -39,8 +39,9 @@ static int run_single_command(const char *cmd) {
     execvp("/bin/sh", argv);
 
     // exec 失败才会执行到这里
-    perror("execvp");
-    _exit(127); // 按惯例，无法执行命令用 127 退出，避免调用父进程的 atexit 处理
+    int ec = (errno == ENOENT) ? 127 : 126; // 127: 未找到; 126: 不能执行
+    perror("execv");
+    _exit(ec); // 避免运行 atexit
   }
 
   // 父进程路径：等待子进程结束

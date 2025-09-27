@@ -141,6 +141,10 @@ void parse_cmd_line(const char *str, Target_block *tb_arr, int tb_count,
 
 int parse_makefile(char (*line_arr_ptr)[MAX_LINE_LENGTH],
                    Target_block *tb_arr) {
+  puts("==============================================");
+  puts("== 解析阶段: 变量与规则块 ==");
+  puts("==============================================");
+
   int tb_count = -1;
   int cmd_count = 0;
 
@@ -193,7 +197,13 @@ int parse_makefile(char (*line_arr_ptr)[MAX_LINE_LENGTH],
   }
   tb_count++;
 
+  // 先打印变量，再打印目标块
+  puts("---- 变量表 ----");
+  var_print_all();
+  puts("---- 目标块 ----");
   print_target_blocks(tb_arr, tb_count);
+  puts("----------------------------------------------");
+  puts("");
 
   return tb_count;
 }
@@ -249,6 +259,9 @@ int is_dep_invaild(Target_block *tb_arr, int tb_count, const char *dep) {
 }
 
 int parse_check(Target_block *tb_arr, int tb_count) {
+  puts("==============================================");
+  puts("== 解析后语法检查阶段 ==");
+  puts("==============================================");
   int has_error = 0;
 
   if (has_duplicate_target(tb_arr, tb_count) == 1)
@@ -267,5 +280,7 @@ int parse_check(Target_block *tb_arr, int tb_count) {
   else
     printf("Please make sure the makefile has no grammar mistake so that the "
            "exe can compile program.\n");
+  puts("----------------------------------------------");
+  puts("");
   return has_error;
 }

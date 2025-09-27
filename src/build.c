@@ -79,6 +79,10 @@ int build_parallel(Target_block *tb_arr, int tb_count, int jobs,
   if (!tb_arr || tb_count <= 0)
     return 0;
 
+  puts("==============================================");
+  puts("== 构建阶段 ==");
+  puts("==============================================");
+
   int root = 0; // 默认以第一个目标为根目标
   if (!target)
     root = 0;
@@ -177,5 +181,7 @@ int build_parallel(Target_block *tb_arr, int tb_count, int jobs,
 
   free(needed);
   free(built);
+  puts("----------------------------------------------");
+  puts("");
   return 0;
 }

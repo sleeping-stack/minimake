@@ -99,10 +99,14 @@ int topo_sort_graph(const DepGraph *g, int order[], int *order_len) {
   }
 
   // 打印排序后结果
-  printf("==== 拓扑排序结果 ====\n");
+  puts("==============================================");
+  puts("== 拓扑排序结果 ==");
+  puts("==============================================");
   for (int i = 0; i < *order_len; i++) {
     printf("%s%s", g->nodes[order[i]].name, (i == *order_len - 1) ? "\n" : " -> ");
   }
+  puts("----------------------------------------------");
+  puts("");
 
   return 0;
 }
@@ -130,6 +134,9 @@ int collect_needed_nodes(const DepGraph *g, int target_index, int needed[]) {
 }
 
 void print_graph(const DepGraph *g) {
+  puts("==============================================");
+  puts("== 依赖图 (dep -> target) ==");
+  puts("==============================================");
   printf("Graph nodes (%d):\n", g->node_count);
   for (int i = 0; i < g->node_count; i++) {
     printf("  [%d] %s %s\n", i, g->nodes[i].name,
@@ -143,4 +150,6 @@ void print_graph(const DepGraph *g) {
       }
     }
   }
+  puts("----------------------------------------------");
+  puts("");
 }
