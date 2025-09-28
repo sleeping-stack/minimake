@@ -26,8 +26,6 @@ int target_need_build(Target_block *tb_arr, int tb_index) {
     for (int i = 0; i < tb_arr[tb_index].dep_count; i++) {
       struct stat st_dep;
       if (stat(tb_arr[tb_index].dep_arr[i], &st_dep) != 0) {
-        // fprintf(stderr, "缺失依赖: '%s' (目标 '%s' 无法构建)\n",
-        //         tb_arr[tb_index].dep_arr[i], tb_arr[tb_index].target);
         return -1;
       }
     }
@@ -42,8 +40,6 @@ int target_need_build(Target_block *tb_arr, int tb_index) {
   for (int i = 0; i < tb_arr[tb_index].dep_count; i++) {
     struct stat st_dep;
     if (stat(tb_arr[tb_index].dep_arr[i], &st_dep) != 0) {
-      fprintf(stderr, "依赖缺失: '%s' (目标 '%s')\n",
-              tb_arr[tb_index].dep_arr[i], tb_arr[tb_index].target);
       return -1;
     }
 
@@ -83,7 +79,7 @@ int build_parallel(Target_block *tb_arr, int tb_count, int jobs,
   puts("== 构建阶段 ==");
   puts("==============================================");
 
-  int root = 0; // 默认以第一个目标为根目标
+  int root = 0;
   if (!target)
     root = 0;
   else {
@@ -112,6 +108,7 @@ int build_parallel(Target_block *tb_arr, int tb_count, int jobs,
     if (needed[i])
       remaining++;
 
+  // 每个循环代表一批
   while (remaining > 0) {
     int indices[MAX_BLOCK_NUMBERS];
     int n_ready = 0; // 本批可执行目标数量
@@ -122,7 +119,7 @@ int build_parallel(Target_block *tb_arr, int tb_count, int jobs,
       if (!needed[i] || built[i]) // 不在子图或已将构建完成，跳过
         continue;
 
-      int ready = 1; // 依赖准备好可以构建
+      int ready = 1; // 1表示依赖准备好可以构建
 
       for (int d = 0; d < tb_arr[i].dep_count; ++d) {
         int j = find_target_index(tb_arr, tb_count, tb_arr[i].dep_arr[d]);
@@ -133,13 +130,13 @@ int build_parallel(Target_block *tb_arr, int tb_count, int jobs,
         }
       }
 
-      if(ready == 0)
+      if (ready == 0)
         continue;
 
       // 依赖已满足构建条件，判断是否需要构建：
       // 返回  1 -> 需要构建
       // 返回  0 -> 已是最新
-      // 返回 -1 -> 依赖缺失或 stat 出错
+      // 返回 -1 -> 依赖缺失（理论上不会出现）
       int need = target_need_build(tb_arr, i);
       if (need < 0) {
         failed = 1;

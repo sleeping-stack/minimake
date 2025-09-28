@@ -77,7 +77,7 @@ static int run_single_command(const char *cmd) {
             strsignal(sig));
     return -1;
   } else {
-    // 其他少见情况（如被停止/继续），这里统一当作失败处理
+    // 其他情况统一当作失败处理
     fprintf(stderr, "Command did not exit normally\n");
     return -1;
   }
@@ -190,6 +190,6 @@ int execute_targets_parallel(Target_block *tb_arr, const int *indices,
     }
   }
 
-  // 若失败，不再启动新的；但已等待所有已启动的进程回收（循环条件保证）
+  // 若失败，不再启动新的子进程；但已等待所有已启动的进程回收（循环条件保证）
   return failed ? -1 : 0;
 }
