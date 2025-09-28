@@ -21,7 +21,7 @@ clean:
 	rm *.o app
 ~~~
 
-- make会默认执行第一条规则，使用`make all`会
+- make会默认执行第一条规则
 - 如果目录下有`clean`文件则需声明clean为伪目标
 
 ## 变量替换
