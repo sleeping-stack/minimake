@@ -16,7 +16,7 @@ int main(int argc, char *argv[]) {
 
   // 解析命令行
   CliOptions opts;
-  if (parse_args(argc, argv, &opts) != 0) {
+  if (parse_args(argc, argv, &opts) != 0) { // 出现错误
     print_usage(argv[0]);
     printf("Please input options correctly!\n");
     return 1;
@@ -26,7 +26,9 @@ int main(int argc, char *argv[]) {
 
   int verbose_mode = opts.verbose_mode;
 
+  // 用于存储makefile中每一行
   char line_arr[MAX_LINE_NUMBERS][MAX_LINE_LENGTH] = {{'\0'}};
+  // 预处理makefile
   if (process_makefile(verbose_mode, line_arr) == 1)
     return 1;
 
@@ -67,7 +69,7 @@ int main(int argc, char *argv[]) {
   int *order_len_ptr = &order_len;
 
   if (topo_sort_graph(&g, order, order_len_ptr) != 0) {
-    fprintf(stderr, "Topo soft faild.");
+    fprintf(stderr, "Topo soft faild.\n");
     return 1;
   }
 
@@ -76,6 +78,7 @@ int main(int argc, char *argv[]) {
 
   // 并行构建目标（默认为第一个目标）
   if (opts.n_targets == 0) {
+    // target传入NULL表示构建第一个目标（默认目标）
     if (build_parallel(tb_arr, tb_count, jobs, NULL) != 0) {
       free(tb_arr);
       return 1;

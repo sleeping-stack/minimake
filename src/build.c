@@ -26,8 +26,8 @@ int target_need_build(Target_block *tb_arr, int tb_index) {
     for (int i = 0; i < tb_arr[tb_index].dep_count; i++) {
       struct stat st_dep;
       if (stat(tb_arr[tb_index].dep_arr[i], &st_dep) != 0) {
-        fprintf(stderr, "缺失依赖: '%s' (目标 '%s' 无法构建)\n",
-                tb_arr[tb_index].dep_arr[i], tb_arr[tb_index].target);
+        // fprintf(stderr, "缺失依赖: '%s' (目标 '%s' 无法构建)\n",
+        //         tb_arr[tb_index].dep_arr[i], tb_arr[tb_index].target);
         return -1;
       }
     }

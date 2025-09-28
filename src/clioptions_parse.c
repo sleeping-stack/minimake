@@ -39,6 +39,7 @@ int parse_args(int argc, char **argv, CliOptions *out) {
       }
       char *end = NULL;
       errno = 0;
+      // 用十进制解析为 long，end 会指向数字解析结束的位置
       long v = strtol(argv[++i], &end, 10);
       if (argv[i] == end || *end != '\0' || errno == ERANGE) {
         fprintf(stderr, "Invalid jobs value: '%s'\n", argv[i]);

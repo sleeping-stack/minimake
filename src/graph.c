@@ -111,28 +111,6 @@ int topo_sort_graph(const DepGraph *g, int order[], int *order_len) {
   return 0;
 }
 
-// 逆向 DFS：找到所有能到达 target_index 的节点（即 target
-// 的所有传递依赖）；结果写入 needed[]，1 表示该节点被需求。
-static void reverse_dfs(const DepGraph *g, int node_index, int needed[]) {
-  if (needed[node_index] == 1) // 已经访问过该节点
-    return;
-  needed[node_index] = 1;
-  // 找前驱：所有 u -> node
-  for (int u = 0; u < g->node_count; u++) { // 对每个结点使用DFS，避免遗漏
-    if (g->adj[u][node_index] == 1) {
-      reverse_dfs(g, u, needed);
-    }
-  }
-}
-
-int collect_needed_nodes(const DepGraph *g, int target_index, int needed[]) {
-  memset(needed, 0, sizeof(int) * g->node_count);
-  if (target_index < 0 || target_index >= g->node_count)
-    return -1;
-  reverse_dfs(g, target_index, needed);
-  return 0;
-}
-
 void print_graph(const DepGraph *g) {
   puts("==============================================");
   puts("== 依赖图 (dep -> target) ==");

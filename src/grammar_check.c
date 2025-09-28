@@ -15,9 +15,9 @@ LineType line_type_judge(const char *str) {
     if (*str == '\t')
       return LINE_COMMAND;
     else {
-      // 跳过前导空格
+      // 跳过前导空白字符
       const char *p = str;
-      while (*p == ' ')
+      while (*p == ' ' || *p == '\t')
         p++;
 
       if (*p == '\0' || *p == '\n') { // 空行
@@ -66,7 +66,7 @@ int grammar_check(char (*line_arr_ptr)[MAX_LINE_LENGTH]) {
   puts("== 静态语法检查阶段 ==");
   puts("==============================================");
   if (line_arr_ptr == NULL) {
-    printf("Error: NULL pointer passed to grammar_check\n");
+    printf("Error: NULL pointer passed to grammar_check!\n");
     return 1;
   }
 
@@ -114,6 +114,7 @@ int grammar_check(char (*line_arr_ptr)[MAX_LINE_LENGTH]) {
 
   if (has_error == 0)
     puts("-- 静态语法检查通过 --");
+  
   puts("----------------------------------------------");
   puts("");
   return has_error;

@@ -31,11 +31,6 @@ int build_dep_graph(DepGraph *g, Target_block *tb_arr, int tb_count);
 // 返回 0 正常；返回 -1 表示检测到环
 int topo_sort_graph(const DepGraph *g, int order[], int *order_len);
 
-static void reverse_dfs(const DepGraph *g, int node_index, int needed[]);
-
-// 收集某个 target 节点所需的全部（其所有传递依赖 + 自身）节点集合 needed[] = 1
-int collect_needed_nodes(const DepGraph *g, int target_index, int needed[]);
-
 // 调试输出
 void print_graph(const DepGraph *g);
 

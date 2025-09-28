@@ -47,7 +47,7 @@ void parse_target_line(const char *str, Target_block *tb_arr, int tb_count) {
   if (!colon)
     return; // 非法格式
   *colon = '\0';
-  // 提取目标
+
   trim(s);
 
   // 变量展开：目标名
@@ -197,7 +197,6 @@ int parse_makefile(char (*line_arr_ptr)[MAX_LINE_LENGTH],
   }
   tb_count++;
 
-  // 先打印变量，再打印目标块
   puts("---- 变量表 ----");
   var_print_all();
   puts("---- 目标块 ----");
