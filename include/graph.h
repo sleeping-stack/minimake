@@ -4,18 +4,19 @@
 #include "common.h"
 #include "parse.h"
 
-typedef struct {
-  char name[MAX_WORD_NUMBERS];
-  int is_target; // 1: 该节点对应一个目标; 0: 仅普通文件
+typedef struct
+{
+    char name[MAX_WORD_NUMBERS];
+    int is_target;  // 1: 该节点对应一个目标; 0: 仅普通文件
 } GraphNode;
 
-typedef struct {
-  int node_count;
-  GraphNode nodes[MAX_GRAPH_NODES];
-  // 使用邻接矩阵表示有向图
-  unsigned char adj[MAX_GRAPH_NODES]
-                   [MAX_GRAPH_NODES]; // adj[u][v] = 1 表示 u -> v
-  int indegree[MAX_GRAPH_NODES];      // 每个节点的入度
+typedef struct
+{
+    int node_count;
+    GraphNode nodes[MAX_GRAPH_NODES];
+    // 使用邻接矩阵表示有向图
+    unsigned char adj[MAX_GRAPH_NODES][MAX_GRAPH_NODES];  // adj[u][v] = 1 表示 u -> v
+    int indegree[MAX_GRAPH_NODES];                        // 每个节点的入度
 } DepGraph;
 
 // 返回添加节点在邻接矩阵中的index, 返回-1表示异常

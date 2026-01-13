@@ -1,13 +1,15 @@
 #ifndef PARSE_VAR_REPLACE_H
 #define PARSE_VAR_REPLACE_H
 
-#include "common.h"
 #include <stddef.h>
 
-typedef struct {
-  char name[MAX_WORD_NUMBERS];
-  char value[MAX_LINE_LENGTH];
-  int used; // 1表示已占用
+#include "common.h"
+
+typedef struct
+{
+    char name[MAX_WORD_NUMBERS];
+    char value[MAX_LINE_LENGTH];
+    int used;  // 1表示已占用
 } VarEntry;
 
 // 变量系统初始化/清理
@@ -26,8 +28,7 @@ static void safe_append_ch(char *dst, size_t dst_size, char ch);
 
 // 将 src 中的 $(NAME) 或 ${NAME} 替换后写入 dst
 // 支持嵌套与递归展开；未定义变量替换为空串
-static int expand_recursive(const char *src, char *dst, size_t dst_size,
-                            int depth);
+static int expand_recursive(const char *src, char *dst, size_t dst_size, int depth);
 void var_expand_into(const char *src, char *dst, size_t dst_size);
 
 // 将变量表导出为环境变量（setenv），便于在命令中用 $NAME
